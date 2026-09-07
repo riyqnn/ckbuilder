@@ -16,6 +16,22 @@
       ]
     }
   },
-  "testnet": {},
+  "testnet": {
+    "hello-world.bc": {
+      "codeHash": "0x68e6c55c513149a84bfb1d733cefda13cc8189a8cca2744e7487a6ce4167c0b2",
+      "hashType": "data2",
+      "cellDeps": [
+        {
+          "cellDep": {
+            "outPoint": {
+              "txHash": "0x9337388cc9779b6a5a15d22ad4060777c380e0b23fe7339703a837e61899f8ec",
+              "index": 0
+            },
+            "depType": "code"
+          }
+        }
+      ]
+    }
+  },
   "mainnet": {}
 }
