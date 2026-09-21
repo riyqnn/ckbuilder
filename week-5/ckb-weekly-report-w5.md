@@ -12,6 +12,8 @@ The project is **Proof of X**, a minimal attestation primitive where a Proof of 
 
 Honest test: if you delete every paragraph that mentions CKB, the architecture collapses. The Cell ownership model, Type Script authorization, and deterministic ID from OutPoint are not portable to other chains without fundamental redesign.
 
+- **Live Demo:** [https://ckbuilder.vercel.app/](https://ckbuilder.vercel.app/)
+
 ## 2. Completed Milestones
 
 - [x] Transfer CKB
