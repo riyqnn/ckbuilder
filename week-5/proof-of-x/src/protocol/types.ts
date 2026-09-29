@@ -9,15 +9,27 @@ export type AttestationStatus = 0 | 1; // 0 = valid, 1 = revoked
 export const ATTESTATION_STATUS_VALID: AttestationStatus = 0;
 export const ATTESTATION_STATUS_REVOKED: AttestationStatus = 1;
 
+/** The only attestation kind in the MVP. Encoded as a byte on-chain. */
+export const KIND_CONTRIBUTION = 0;
+
+/**
+ * Every field is always present. `evidence` is "" and `revoked_at` is 0 rather
+ * than undefined, because an absent field would change the encoded length, and
+ * revocation has to preserve the cell's capacity.
+ *
+ * `issued_at` and `revoked_at` are issuer-attested, not chain-proven: a Type
+ * Script cannot read wall-clock time without a header dep, so it only checks
+ * that revoked_at is 0 while VALID and non-zero once REVOKED.
+ */
 export interface OnChainAttestationData {
   version: 1;
   attestation_id: Hex; // 0x-prefixed 32-byte hex (66 chars)
   type: "contribution"; // fixed MVP type
-  claim: string; // short plaintext, max 120 chars
-  evidence?: string; // optional short URL, max 150 chars
-  issued_at: number; // block number or unix timestamp (seconds)
+  claim: string; // short plaintext, max 120 UTF-8 bytes
+  evidence: string; // short URL, "" when absent, max 150 UTF-8 bytes
+  issued_at: number; // unix timestamp (seconds)
   status: AttestationStatus; // 0 = valid, 1 = revoked
-  revoked_at?: number; // block number or unix timestamp (seconds)
+  revoked_at: number; // unix timestamp (seconds), 0 while VALID
 }
 
 export interface AttestationCellInfo {

@@ -1,0 +1,21 @@
+{
+  "devnet": {},
+  "testnet": {
+    "pox-type.bc": {
+      "codeHash": "0x98d78fa7216b17ef9501a6ee7dff98a8a9f2ea05b04a593a6ff84782ea5b55ff",
+      "hashType": "data2",
+      "cellDeps": [
+        {
+          "cellDep": {
+            "outPoint": {
+              "txHash": "0x75f75dfb1ec059c3b815469d389e06056def390d7d9d5855484055593c09f7cc",
+              "index": 0
+            },
+            "depType": "code"
+          }
+        }
+      ]
+    }
+  },
+  "mainnet": {}
+}

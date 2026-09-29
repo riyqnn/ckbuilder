@@ -5,9 +5,10 @@
  * attestation_id -> current live Cell -> verify state
  */
 
-import { Client, Hex, Script } from "@ckb-ccc/core";
+import { Client, Hex } from "@ckb-ccc/core";
 import { decodeAttestationData } from "./codec";
 import { DEFAULT_PROTOCOL_CONFIG, ProtocolConfig } from "./config";
+import { buildAttestationTypeScript } from "./script";
 import { AttestationCellInfo } from "./types";
 
 export interface DiscoverAttestationParams {
@@ -27,19 +28,15 @@ export async function discoverLiveAttestationCell(
 
   const targetId = attestationId.toLowerCase();
 
-  // Search by Type Script with codeHash & hashType
-  // Search query via client.findCells
-  const typeFilter = new Script(
-    config.typeScriptCodeHash,
-    config.typeScriptHashType,
-    "0x" // match any issuer args or specific
-  );
+  // Exact match on the full type script, args included. A prefix search on the
+  // bare ckb-js-vm code hash would walk every ckb-js-vm cell on the network.
+  const typeFilter = buildAttestationTypeScript(config.authorizedIssuerLockHash, config);
 
   try {
     for await (const cell of client.findCells({
       script: typeFilter,
       scriptType: "type",
-      scriptSearchMode: "prefix",
+      scriptSearchMode: "exact",
     })) {
       if (!cell.outputData || cell.outputData === "0x") {
         continue;

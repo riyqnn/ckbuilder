@@ -7,6 +7,7 @@
 import { Address, Client, Hex } from "@ckb-ccc/core";
 import { DEFAULT_PROTOCOL_CONFIG, ProtocolConfig } from "./config";
 import { discoverLiveAttestationCell } from "./discovery";
+import { issuerLockHashFromArgs, poxCodeHashFromArgs } from "./script";
 import {
   ATTESTATION_STATUS_REVOKED,
   ATTESTATION_STATUS_VALID,
@@ -72,10 +73,16 @@ export async function verifyAttestation(
     },
   });
 
-  // Check 2: Type Script is the expected attestation type
+  // Check 2: Type Script is the expected attestation type.
+  // Two things have to match: the outer script is ckb-js-vm, and its args name
+  // the Proof of X validator bytecode. Checking only the outer code hash would
+  // accept any ckb-js-vm script at all.
+  const poxCodeHashInCell = poxCodeHashFromArgs(cellInfo.typeScript.args);
   const isTypeValid =
-    cellInfo.typeScript.codeHash.toLowerCase() === config.typeScriptCodeHash.toLowerCase() &&
-    cellInfo.typeScript.hashType === config.typeScriptHashType;
+    cellInfo.typeScript.codeHash.toLowerCase() === config.jsVm.codeHash.toLowerCase() &&
+    cellInfo.typeScript.hashType === config.jsVm.hashType &&
+    poxCodeHashInCell !== null &&
+    poxCodeHashInCell.toLowerCase() === config.pox.codeHash.toLowerCase();
 
   checks.push({
     id: "type-script-valid",
@@ -83,16 +90,17 @@ export async function verifyAttestation(
     passed: isTypeValid,
     severity: "critical",
     detail: isTypeValid
-      ? `Cell Type Script code_hash matches protocol standard (${cellInfo.typeScript.codeHash.slice(0, 10)}...)`
-      : `Cell Type Script mismatch. Expected code_hash ${config.typeScriptCodeHash}, got ${cellInfo.typeScript.codeHash}`,
+      ? `Cell runs the Proof of X validator on ckb-js-vm (code_hash ${config.pox.codeHash.slice(0, 10)}...)`
+      : `Cell Type Script mismatch. Expected ckb-js-vm ${config.jsVm.codeHash} running ${config.pox.codeHash}, got ${cellInfo.typeScript.codeHash} running ${poxCodeHashInCell ?? "unparseable args"}`,
     onChainReference: {
-      label: "Type Code Hash",
-      value: cellInfo.typeScript.codeHash,
+      label: "Validator Code Hash",
+      value: poxCodeHashInCell ?? cellInfo.typeScript.args,
     },
   });
 
-  // Check 3: Type Script args contain expected issuer_lock_hash
-  const issuerLockHashInCell = cellInfo.typeScript.args.toLowerCase();
+  // Check 3: Type Script args contain expected issuer_lock_hash.
+  // It sits at byte offset 35, after the 35 bytes ckb-js-vm reserves for itself.
+  const issuerLockHashInCell = (issuerLockHashFromArgs(cellInfo.typeScript.args) ?? "0x").toLowerCase();
   const expectedIssuerLockHash = config.authorizedIssuerLockHash.toLowerCase();
   const isIssuerValid = issuerLockHashInCell === expectedIssuerLockHash;
 

@@ -4,20 +4,11 @@
  * Implements Issue and Revoke transaction construction using CCC APIs.
  */
 
-import {
-  Address,
-  CellOutput,
-  CellOutputLike,
-  Client,
-  Hex,
-  hexFrom,
-  Script,
-  Signer,
-  Transaction,
-} from "@ckb-ccc/core";
+import { Address, CellDep, Hex, Script, Signer, Transaction } from "@ckb-ccc/core";
 import { encodeAttestationData } from "./codec";
 import { DEFAULT_PROTOCOL_CONFIG, ProtocolConfig } from "./config";
 import { generateAttestationId } from "./id";
+import { attestationCellDeps, buildAttestationTypeScript } from "./script";
 import {
   ATTESTATION_STATUS_REVOKED,
   ATTESTATION_STATUS_VALID,
@@ -77,19 +68,16 @@ export async function buildIssueAttestationTx(
     attestation_id: placeholderId,
     type: "contribution",
     claim,
-    evidence,
+    evidence: evidence?.trim() ?? "",
     issued_at: now,
     status: ATTESTATION_STATUS_VALID,
+    revoked_at: 0,
   };
 
   const encodedData = encodeAttestationData(provisionalData);
 
-  // 3. Define Type Script (args = issuerLockHash)
-  const typeScript = new Script(
-    config.typeScriptCodeHash,
-    config.typeScriptHashType,
-    issuerLockHash
-  );
+  // 3. Define Type Script (ckb-js-vm, args carry the pox bytecode + issuer)
+  const typeScript = buildAttestationTypeScript(issuerLockHash, config);
 
   // 4. Instantiate Transaction and set placeholder output
   const tx = Transaction.from({
@@ -103,28 +91,32 @@ export async function buildIssueAttestationTx(
     outputsData: [encodedData],
   });
 
-  // Calculate required capacity for output cell (1 byte = 1 CKB = 100,000,000 shannons)
+  // 1 byte of cell = 1 CKB = 100,000,000 shannons. Exact occupied capacity is
+  // also the final capacity: Molecule encodes an attestation to the same length
+  // whether VALID or REVOKED, so revocation cannot grow the data and there is
+  // nothing to pad against. The Week 5 JSON codec did grow, which is why it
+  // needed slack it never actually had.
   const cellByteSize = Number(tx.outputs[0].occupiedSize) + Math.ceil((encodedData.length - 2) / 2);
-  const minCapacity = BigInt(cellByteSize) * 100000000n;
-  // Set capacity with a comfortable buffer (minimum 150 CKB)
-  const assignedCapacity = minCapacity > 15000000000n ? minCapacity : 15000000000n;
-  tx.outputs[0].capacity = assignedCapacity;
+  tx.outputs[0].capacity = BigInt(cellByteSize) * 100000000n;
 
-  // 5. Complete transaction inputs from Issuer's wallet to find input 0
+  // 5. The interpreter and the validator bytecode must both be in scope.
+  tx.cellDeps.push(...attestationCellDeps(config).map((dep) => CellDep.from(dep)));
+
+  // 6. Complete transaction inputs from Issuer's wallet to find input 0
   await tx.completeInputsByCapacity(signer);
 
   if (tx.inputs.length === 0) {
     throw new Error("Insufficient CKB balance to issue attestation.");
   }
 
-  // 6. Derive deterministic attestation_id from the first input OutPoint
+  // 7. Derive deterministic attestation_id from the first input OutPoint
   const firstInputOutPoint = tx.inputs[0].previousOutput;
   const attestationId = generateAttestationId({
     txHash: firstInputOutPoint.txHash,
     index: firstInputOutPoint.index,
   });
 
-  // 7. Re-encode with exact attestation_id
+  // 8. Re-encode with exact attestation_id
   const finalData: OnChainAttestationData = {
     ...provisionalData,
     attestation_id: attestationId,
@@ -179,6 +171,9 @@ export async function buildRevokeAttestationTx(
     liveCell.holderLock.args
   );
 
+  // Reused verbatim: the script group is keyed on the full script hash, so any
+  // change here would split the transaction into two groups instead of
+  // performing a transition.
   const typeScript = new Script(
     liveCell.typeScript.codeHash,
     liveCell.typeScript.hashType,
@@ -205,7 +200,10 @@ export async function buildRevokeAttestationTx(
     outputsData: [newEncodedData],
   });
 
-  // Complete additional inputs & fee by issuer signer
+  tx.cellDeps.push(...attestationCellDeps(config).map((dep) => CellDep.from(dep)));
+
+  // The issuer's own cells come in here, which is also what proves authorization
+  // to the Type Script: it looks for an input whose lock hash is the issuer's.
   await tx.completeInputsByCapacity(signer);
   await tx.completeFeeBy(signer, 2000n);
 

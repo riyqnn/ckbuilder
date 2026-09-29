@@ -1,0 +1,53 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.keystore
+*secret*
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build and framework outputs
+.next/
+out/
+build/
+dist/
+coverage/
+
+# TypeScript & Cache
+*.tsbuildinfo
+.turbo/
+.cache/
+.parcel-cache/
+
+# Debug and runtime logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp

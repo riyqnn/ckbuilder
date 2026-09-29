@@ -1,0 +1,31 @@
+// Proof of X - on-chain attestation cell data.
+//
+// Single source of truth for the cell data layout. Implemented twice:
+//   - contracts/pox-type/src/schema.ts   (mol from @ckb-js-std/core, runs in CKB-VM)
+//   - week-5/proof-of-x/src/protocol/codec.ts (mol from @ckb-ccc/core, runs in the dApp)
+//
+// Field order is what determines the bytes; field names are local to each
+// implementation. The fixed hex vector in both test suites pins the encoding.
+//
+// Replaces the JSON encoding used in Week 5. JSON dropped `revoked_at` when
+// absent, so the same logical cell was 269 bytes as VALID and 293 as REVOKED,
+// while revoke preserves capacity. Here every field is present at all times,
+// so VALID and REVOKED are both 184 bytes and capacity stays correct.
+
+array Byte32 [byte; 32];
+array Uint64 [byte; 8];
+
+table AttestationData {
+    version:        byte,     // = 1
+    attestation_id: Byte32,   // hashCkb(first input OutPoint), stable across revoke
+    kind:           byte,     // 0 = contribution
+    status:         byte,     // 0 = VALID, 1 = REVOKED
+    issued_at:      Uint64,   // unix seconds, issuer-attested (see note below)
+    revoked_at:     Uint64,   // unix seconds, 0 while VALID
+    claim:          String,   // utf8, <= 120 bytes
+    evidence:       String,   // utf8, "" when absent, <= 150 bytes
+}
+
+// Note: issued_at and revoked_at cannot be validated by the Type Script without
+// a header dep. They are issuer-attested values, not chain-proven ones. The
+// script only enforces revoked_at == 0 while VALID and != 0 once REVOKED.
