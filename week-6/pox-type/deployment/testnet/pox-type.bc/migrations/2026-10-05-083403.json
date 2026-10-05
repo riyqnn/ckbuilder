@@ -1,0 +1,12 @@
+{
+  "cell_recipes": [
+    {
+      "name": "pox-type.bc",
+      "tx_hash": "0x7f403e4e0f3134e8fea59cef54d913b77d9709f589f2a64ec64c164a083368aa",
+      "index": 0,
+      "occupied_capacity": 358700000000,
+      "data_hash": "0x98d78fa7216b17ef9501a6ee7dff98a8a9f2ea05b04a593a6ff84782ea5b55ff"
+    }
+  ],
+  "dep_group_recipes": []
+}

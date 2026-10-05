@@ -52,20 +52,24 @@ export const DEFAULT_PROTOCOL_CONFIG: ProtocolConfig = {
   // week-6/pox-type/dist/pox-type.bc, deployed without --type-id: the code hash
   // is the data hash of the bytecode, so the validation rules cannot be swapped
   // out from under attestations that already exist.
+  // Redeployed in Week 7: the Week 6 code cell (0x75f75dfb...) was spent by
+  // someone else holding the old shared key. Same bytes, same code hash.
   pox: {
     codeHash: "0x98d78fa7216b17ef9501a6ee7dff98a8a9f2ea05b04a593a6ff84782ea5b55ff",
     hashType: "data2",
     cellDep: {
       outPoint: {
-        txHash: "0x75f75dfb1ec059c3b815469d389e06056def390d7d9d5855484055593c09f7cc",
+        txHash: "0x7f403e4e0f3134e8fea59cef54d913b77d9709f589f2a64ec64c164a083368aa",
         index: 0,
       },
       depType: "code",
     },
   },
 
-  // Lock hash of the Week 6 issuer wallet
-  // (ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqvwg2cen8extgq8s5puft8vf40px3f599cytcyd8).
+  // Lock hash of the issuer wallet, rotated in Week 7
+  // (ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsq2lkmf8sce745avll0ctlfr9g479tmcz4sg6n50n).
+  // The Week 6 wallet (0x7de82d61...) had on-chain activity from 2024, so its
+  // key was not private to this project.
   authorizedIssuerLockHash:
-    "0x7de82d61a7eb2ec82b0dc653e558ba120efcbfbb44dac87c12972d05bf250653",
+    "0x21c17dfb3755dd0a6629c618efbe06d807c9abf0b45adba6fe9f659243f2f4e6",
 };

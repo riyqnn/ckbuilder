@@ -14,6 +14,7 @@ Personal repository tracking progress, smart contracts, dApps, and weekly report
 | **Week 4** | Digital Object (DOB) Minter via Spore | [`week-4/dob-minter/`](./week-4/dob-minter/) | [`week-4/ckb-weekly-report-w4.md`](./week-4/ckb-weekly-report-w4.md) |
 | **Week 5** | Application Layer: **Proof of X** | [`week-5/proof-of-x/`](./week-5/proof-of-x/) | [`week-5/ckb-weekly-report-w5.md`](./week-5/ckb-weekly-report-w5.md) |
 | **Week 6** | Proof of X Type Script on Testnet + Molecule | [`week-6/pox-type/`](./week-6/pox-type/) | [`week-6/ckb-weekly-report-w6.md`](./week-6/ckb-weekly-report-w6.md) |
+| **Week 7** | PoX Badge (xUDT) + issuer key rotation | [`week-5/proof-of-x/src/badge/`](./week-5/proof-of-x/src/badge/) | [`week-7/ckb-weekly-report-w7.md`](./week-7/ckb-weekly-report-w7.md) |
 
 ---
 

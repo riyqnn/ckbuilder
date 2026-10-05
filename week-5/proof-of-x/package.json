@@ -9,7 +9,10 @@
     "start": "next start -p 3005",
     "lint": "next lint",
     "test:protocol": "tsx src/protocol/protocol.test.ts",
-    "test:e2e": "tsx src/protocol/e2e.testnet.ts"
+    "test:e2e": "tsx src/protocol/e2e.testnet.ts",
+    "badge:issue": "tsx src/badge/issue.ts",
+    "badge:reward": "tsx src/badge/reward.ts",
+    "badge:balance": "tsx src/badge/balance.ts"
   },
   "dependencies": {
     "@ckb-ccc/connector-react": "^2.1.6",
